@@ -11,6 +11,7 @@ library(tibble)
 library(ggplot2)
 library(lme4)
 library(optimx)
+library(glue)
 
 
 
@@ -343,6 +344,20 @@ init_fs_vol_regionlabel_list <- function() {
 }
 
 
+
+calc_rowmeans_by_colname_strsearch <- function(df, colname_search_vec) {
+  
+  for (i in 1:length(colname_search_vec)) {
+    name = colname_search_vec[[i]]
+    colnames_list = colnames(df) %>% str_subset(colname_search_vec[[i]])
+    df = df %>% mutate("sp_{name}_AVG" := rowMeans(pick(all_of(colnames_list)), na.rm = TRUE))
+  }
+  
+  df
+}
+
+
+
 ## TO-DO: function to deal with people not labelling follow-up visits with MAPIDs
 ## TMP = SLEEP %>% group_by(`Subject ID`) %>% mutate(MAPID = min(MAPID, na.rm = TRUE))
 ## TMP2 = TMP %>% group_by(`Subject ID`) %>% mutate(Gender = Gender[which(`Event Name` == "Baseline")])
@@ -354,7 +369,12 @@ init_fs_vol_regionlabel_list <- function() {
 
 
 ##TO-DO: remove all TMP data.frames from a r session
-
+## DOESN'T WORK YET
+clear_tmp_dfs <- function() {
+  df_list = names(which(unlist(eapply(.GlobalEnv,is.data.frame)))) %>%
+    str_subset("TMP") %>%
+    lapply(df_list,rm)
+}
 
 
 ##TO-DO: filter columns of a data.frame by a supplied vector of colnames
